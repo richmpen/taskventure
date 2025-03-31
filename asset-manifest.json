@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/taskventure/static/css/main.90a2122d.css",
+    "main.js": "/taskventure/static/js/main.7bf1aaaa.js",
+    "index.html": "/taskventure/index.html",
+    "main.90a2122d.css.map": "/taskventure/static/css/main.90a2122d.css.map",
+    "main.7bf1aaaa.js.map": "/taskventure/static/js/main.7bf1aaaa.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.90a2122d.css",
+    "static/js/main.7bf1aaaa.js"
+  ]
+}
