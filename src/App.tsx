@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, HashRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -13,7 +13,7 @@ import Character from './pages/Character';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
-const App: React.FC = () => {
+const AppRoutes: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Имитация загрузки приложения
@@ -52,6 +52,15 @@ const App: React.FC = () => {
         </Routes>
       </div>
     </AuthProvider>
+  );
+};
+
+// Оборачиваем приложение в HashRouter для поддержки GitHub Pages
+const App: React.FC = () => {
+  return (
+    <HashRouter>
+      <AppRoutes />
+    </HashRouter>
   );
 };
 
