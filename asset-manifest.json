@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/taskventure/static/css/main.90a2122d.css",
-    "main.js": "/taskventure/static/js/main.7bf1aaaa.js",
-    "index.html": "/taskventure/index.html",
-    "main.90a2122d.css.map": "/taskventure/static/css/main.90a2122d.css.map",
-    "main.7bf1aaaa.js.map": "/taskventure/static/js/main.7bf1aaaa.js.map"
+    "main.css": "/static/css/main.5ff20cc0.css",
+    "main.js": "/static/js/main.e0ef83ab.js",
+    "index.html": "/index.html",
+    "main.5ff20cc0.css.map": "/static/css/main.5ff20cc0.css.map",
+    "main.e0ef83ab.js.map": "/static/js/main.e0ef83ab.js.map"
   },
   "entrypoints": [
-    "static/css/main.90a2122d.css",
-    "static/js/main.7bf1aaaa.js"
+    "static/css/main.5ff20cc0.css",
+    "static/js/main.e0ef83ab.js"
   ]
 }
