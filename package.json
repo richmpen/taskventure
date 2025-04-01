@@ -2,7 +2,7 @@
     "name": "taskventure",
     "version": "0.1.0",
     "private": true,
-    "homepage": "/",
+    "homepage": "https://richmpen.github.io/taskventure",
     "resolutions": {
         "ajv": "6.12.6"
     },
