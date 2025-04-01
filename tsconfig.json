@@ -20,9 +20,14 @@
       "noEmit": true,
       "jsx": "react-jsx",
       "baseUrl": "src",
-      "downlevelIteration": true
+      "downlevelIteration": true,
+      "paths": {
+        "./pages/*": ["pages/*"]
+      }
     },
     "include": [
-      "src"
+      "src",
+      "src/pages/*.tsx",
+      "src/pages/page-modules.d.ts"
     ]
   }

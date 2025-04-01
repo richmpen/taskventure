@@ -1,0 +1,12 @@
+export { default as Home } from './Home';
+export { default as Login } from './Login';
+export { default as Register } from './Register';
+export { default as Tasks } from './Tasks';
+export { default as Battle } from './Battle';
+export { default as Character } from './Character';
+export { default as Profile } from './Profile';
+export { default as Admin } from './Admin';
+export { default as Settings } from './Settings';
+export { default as NotFound } from './NotFound';
+export { default as Friends } from './Friends';
+export { default as Shop } from './Shop'; 

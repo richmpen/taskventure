@@ -1,425 +1,343 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { motion } from 'framer-motion';
+import { useParams, useNavigate } from 'react-router-dom';
+import localforage from 'localforage';
+import { AnimeCharacter, Gift } from '../types';
+import { FaHeart, FaCoins, FaGift, FaArrowLeft, FaStar } from 'react-icons/fa';
 
-// Типы характеристик
-enum StatType {
-  STRENGTH = 'strength',
-  INTELLIGENCE = 'intelligence',
-  AGILITY = 'agility',
-  CHARISMA = 'charisma'
-}
-
-// Информация о характеристике
-interface StatInfo {
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-}
-
-// Структура персонажа
-interface CharacterStats {
-  strength: number;
-  intelligence: number;
-  agility: number;
-  charisma: number;
-}
+// Массив подарков по умолчанию
+const defaultGifts: Gift[] = [
+  {
+    id: 'gift1',
+    name: 'Цветы',
+    description: 'Красивый букет цветов',
+    image: 'https://api.dicebear.com/7.x/icons/svg?seed=flower',
+    price: 50,
+    affectionPoints: 5
+  },
+  {
+    id: 'gift2',
+    name: 'Шоколад',
+    description: 'Коробка вкусного шоколада',
+    image: 'https://api.dicebear.com/7.x/icons/svg?seed=chocolate',
+    price: 100,
+    affectionPoints: 10
+  },
+  {
+    id: 'gift3',
+    name: 'Плюшевая игрушка',
+    description: 'Милая плюшевая игрушка',
+    image: 'https://api.dicebear.com/7.x/icons/svg?seed=teddy',
+    price: 150,
+    affectionPoints: 15
+  }
+];
 
 const Character: React.FC = () => {
+  const { characterId } = useParams<{ characterId: string }>();
+  const navigate = useNavigate();
   const { currentUser, updateUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'stats' | 'achievements' | 'inventory'>('stats');
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [selectedStat, setSelectedStat] = useState<StatType | null>(null);
-  
-  // Информация о характеристиках
-  const statsInfo: Record<StatType, StatInfo> = {
-    [StatType.STRENGTH]: {
-      name: 'Сила',
-      description: 'Увеличивает урон в битвах и позволяет выполнять более сложные задачи.',
-      icon: '💪',
-      color: 'text-red-500'
-    },
-    [StatType.INTELLIGENCE]: {
-      name: 'Интеллект',
-      description: 'Даёт дополнительный опыт за выполнение задач, связанных с обучением.',
-      icon: '🧠',
-      color: 'text-blue-500'
-    },
-    [StatType.AGILITY]: {
-      name: 'Ловкость',
-      description: 'Увеличивает защиту в битвах и шанс уклонения от атак.',
-      icon: '🏃',
-      color: 'text-green-500'
-    },
-    [StatType.CHARISMA]: {
-      name: 'Харизма',
-      description: 'Открывает доступ к специальным заданиям и улучшает наградой.',
-      icon: '🌟',
-      color: 'text-yellow-500'
-    }
-  };
-  
-  // Достижения персонажа
-  const achievements = [
-    {
-      id: 'ach1',
-      title: 'Первые шаги',
-      description: 'Выполнить первую задачу',
-      icon: '🚶',
-      unlocked: true
-    },
-    {
-      id: 'ach2',
-      title: 'Боевое крещение',
-      description: 'Выиграть первую битву',
-      icon: '⚔️',
-      unlocked: currentUser && currentUser.level >= 2
-    },
-    {
-      id: 'ach3',
-      title: 'Мастер планирования',
-      description: 'Выполнить 10 задач',
-      icon: '📝',
-      unlocked: false
-    },
-    {
-      id: 'ach4',
-      title: 'Герой продуктивности',
-      description: 'Достичь 5 уровня',
-      icon: '🏆',
-      unlocked: false
-    }
-  ];
-  
-  // Предметы в инвентаре
-  const inventory = [
-    {
-      id: 'item1',
-      name: 'Кофейный напиток',
-      description: '+10 к энергии на следующую задачу',
-      icon: '☕',
-      usable: true
-    },
-    {
-      id: 'item2',
-      name: 'Щит фокуса',
-      description: '+5 к защите в битвах',
-      icon: '🛡️',
-      usable: false,
-      equipped: true
-    }
-  ];
+  const [character, setCharacter] = useState<AnimeCharacter | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [gifts, setGifts] = useState<Gift[]>([]);
+  const [processing, setProcessing] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  // Получение значения характеристики
-  const getStatValue = (statType: StatType): number => {
-    if (!currentUser || !currentUser.character || !currentUser.character.stats) {
-      return 10; // Значение по умолчанию
-    }
-    
-    switch (statType) {
-      case StatType.STRENGTH:
-        return currentUser.character.stats.strength || 10;
-      case StatType.INTELLIGENCE:
-        return currentUser.character.stats.intelligence || 10;
-      case StatType.AGILITY:
-        return currentUser.character.stats.agility || 10;
-      case StatType.CHARISMA:
-        return currentUser.character.stats.charisma || 10;
-      default:
-        return 10;
-    }
-  };
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Загрузка персонажа
+        const characters = await localforage.getItem<AnimeCharacter[]>('animeCharacters') || [];
+        const foundCharacter = characters.find(c => c.id === characterId);
+        
+        if (foundCharacter) {
+          setCharacter(foundCharacter);
+          
+          // Проверяем, является ли персонаж избранным
+          const favoriteId = await localforage.getItem<string>('favoriteCharacterId');
+          setIsFavorite(favoriteId === foundCharacter.id);
+        } else {
+          navigate('/profile');
+        }
 
-  // Обновление характеристики
-  const upgradeStat = async (statType: StatType) => {
-    if (!currentUser) return;
-    
-    // Проверка наличия нераспределенных очков (для демонстрации всегда даем возможность)
-    // В реальном приложении здесь будет проверка availablePoints
-    
-    const stats = currentUser.character?.stats || {
-      strength: 10,
-      intelligence: 10,
-      agility: 10,
-      charisma: 10
-    };
-    
-    // Создаем копию статов и обновляем нужную характеристику
-    const updatedStats: CharacterStats = {
-      ...stats,
-    };
-    
-    switch (statType) {
-      case StatType.STRENGTH:
-        updatedStats.strength += 1;
-        break;
-      case StatType.INTELLIGENCE:
-        updatedStats.intelligence += 1;
-        break;
-      case StatType.AGILITY:
-        updatedStats.agility += 1;
-        break;
-      case StatType.CHARISMA:
-        updatedStats.charisma += 1;
-        break;
-    }
-    
-    // Обновляем пользователя
-    await updateUser({
-      character: {
-        ...currentUser.character,
-        stats: updatedStats
+        // Загрузка подарков
+        const savedGifts = await localforage.getItem<Gift[]>('gifts') || [];
+        setGifts(savedGifts.length > 0 ? savedGifts : defaultGifts);
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+      } finally {
+        setLoading(false);
       }
-    });
+    };
+
+    loadData();
+  }, [characterId, navigate]);
+
+  // Добавить/удалить из избранного
+  const toggleFavorite = async () => {
+    if (!character) return;
     
-    setShowConfirm(false);
-    setSelectedStat(null);
+    try {
+      if (isFavorite) {
+        // Удаляем из избранного
+        await localforage.removeItem('favoriteCharacterId');
+        setIsFavorite(false);
+      } else {
+        // Добавляем в избранное
+        await localforage.setItem('favoriteCharacterId', character.id);
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error('Ошибка при изменении избранного персонажа:', error);
+    }
   };
-  
-  // Отображение модального окна подтверждения
-  const StatConfirm = () => {
-    if (!selectedStat) return null;
+
+  // Действие с подарком
+  const handleGiveGift = async (gift: Gift) => {
+    if (!character || !currentUser || processing) return;
     
-    const stat = statsInfo[selectedStat];
-    const currentValue = getStatValue(selectedStat);
+    setProcessing(true);
     
+    try {
+      // Проверка наличия денег
+      if (currentUser.coins < gift.price) {
+        alert('Недостаточно монет!');
+        return;
+      }
+
+      // Обновление персонажа
+      const affectionIncrease = gift.affectionPoints;
+      const updatedCharacter = {
+        ...character,
+        affection: character.affection + affectionIncrease
+      };
+
+      // Обновление списка персонажей
+      const characters = await localforage.getItem<AnimeCharacter[]>('animeCharacters') || [];
+      const updatedCharacters = characters.map(c => 
+        c.id === character.id ? updatedCharacter : c
+      );
+      
+      await localforage.setItem('animeCharacters', updatedCharacters);
+      setCharacter(updatedCharacter);
+
+      // Обновление пользователя
+      const updatedUser = {
+        ...currentUser,
+        coins: currentUser.coins - gift.price
+      };
+      
+      await updateUser(updatedUser);
+      
+      // Показать сообщение
+      const phrase = character.phrases.gift[Math.floor(Math.random() * character.phrases.gift.length)];
+      setMessage(phrase);
+      setShowGiftModal(false);
+      
+    } catch (error) {
+      console.error('Ошибка при дарении подарка:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Взаимодействие с персонажем
+  const handleInteract = async () => {
+    if (!character || processing) return;
+    
+    setProcessing(true);
+    try {
+      // Получаем случайную фразу
+      const phrases = character.phrases.interaction;
+      const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+      setMessage(randomPhrase);
+      
+      // Увеличиваем привязанность
+      const newAffection = Math.min(character.affection + 1, 100);
+      const updatedCharacter = { ...character, affection: newAffection };
+      
+      // Сохраняем обновленного персонажа
+      const characters = await localforage.getItem<AnimeCharacter[]>('animeCharacters') || [];
+      const updatedCharacters = characters.map(c => 
+        c.id === character.id ? updatedCharacter : c
+      );
+      
+      await localforage.setItem('animeCharacters', updatedCharacters);
+      setCharacter(updatedCharacter);
+      
+      // Через 3 секунды скрываем сообщение
+      setTimeout(() => {
+        setMessage(null);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Ошибка при взаимодействии с персонажем:', error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Получить ключ изображения на основе уровня отношений
+  const getImageIndex = (affection: number): string => {
+    if (character) {
+      if (affection >= 50 && character.images.level3) return 'level3';
+      if (affection >= 20 && character.images.level2) return 'level2';
+      if (affection >= 5 && character.images.level1) return 'level1';
+    }
+    return 'default';
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Загрузка...</div>;
+  }
+
+  if (!character) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="container-ios max-w-md w-full">
-          <h2 className="text-xl font-bold mb-4">Улучшить характеристику?</h2>
-          
-          <div className="flex items-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl mr-3">
-              {stat.icon}
-            </div>
-            <div>
-              <h3 className={`font-bold ${stat.color}`}>{stat.name}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{stat.description}</p>
-            </div>
-          </div>
-          
-          <div className="mb-6">
-            <p className="text-sm">
-              Текущее значение: <span className="font-medium">
-                {currentValue}
-              </span>
-            </p>
-            <p className="text-sm">
-              Новое значение: <span className="font-medium text-primary">
-                {currentValue + 1}
-              </span>
-            </p>
-          </div>
-          
-          <div className="flex justify-end space-x-3">
-            <button 
-              onClick={() => {
-                setShowConfirm(false);
-                setSelectedStat(null);
-              }}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-ios"
-            >
-              Отмена
-            </button>
-            <button 
-              onClick={() => selectedStat && upgradeStat(selectedStat)}
-              className="btn-primary"
-            >
-              Улучшить
-            </button>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl">Персонаж не найден</p>
+          <button 
+            onClick={() => navigate('/profile')} 
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg"
+          >
+            Вернуться к профилю
+          </button>
         </div>
       </div>
     );
-  };
+  }
 
+  // Определяем изображение в зависимости от уровня отношений
+  const imageKey = getImageIndex(character.affection);
+  const currentImage = character.images[imageKey as keyof typeof character.images] || character.images.default;
+  
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Мой персонаж</h1>
+    <div className="relative min-h-screen flex flex-col">
+      {/* Кнопка возврата */}
+      <div className="absolute top-4 left-4 z-10 flex space-x-2">
+        <button 
+          onClick={() => navigate('/profile')}
+          className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-md"
+        >
+          <FaArrowLeft size={20} />
+        </button>
+        
+        <button 
+          onClick={toggleFavorite}
+          className={`p-2 rounded-full shadow-md ${
+            isFavorite 
+              ? 'bg-yellow-500 text-white' 
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+          }`}
+          title={isFavorite ? 'Удалить из избранного' : 'Добавить в избранное'}
+        >
+          <FaStar size={20} />
+        </button>
+      </div>
       
-      {/* Карточка персонажа */}
-      <div className="container-ios mb-6">
-        <div className="flex flex-col md:flex-row md:items-center">
-          <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
-            <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center text-5xl mx-auto">
-              👤
-            </div>
-          </div>
-          
-          <div className="flex-grow">
-            <h2 className="text-xl font-bold">{currentUser?.username || 'Игрок'}</h2>
-            <div className="flex items-center mt-1 mb-3">
-              <span className="text-primary font-bold mr-2">Уровень {currentUser?.level || 1}</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {currentUser?.experience || 0} / {(currentUser?.level || 1) * 1000} XP
-              </span>
-            </div>
-            
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
+      {/* Полноэкранное изображение */}
+      <div className="relative flex-1 w-full h-screen flex items-center justify-center bg-gray-900">
+        <img 
+          src={currentImage} 
+          alt={character.name}
+          className="w-full h-full object-contain max-h-screen"
+        />
+        
+        {/* Имя персонажа и привязанность */}
+        <div className="absolute top-4 right-4 bg-black/70 p-3 rounded-lg text-white">
+          <h1 className="text-xl font-bold">{character.name}</h1>
+          <div className="flex items-center mt-1">
+            <FaHeart className="text-red-500 mr-2" />
+            <div className="h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
               <div 
-                className="bg-primary h-2 rounded-full" 
-                style={{ width: `${((currentUser?.experience || 0) % 1000) / 10}%` }}
+                className="h-full bg-red-500" 
+                style={{ width: `${character.affection}%` }}
               ></div>
             </div>
-            
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              До следующего уровня: {(currentUser?.level || 1) * 1000 - (currentUser?.experience || 0)} XP
-            </p>
+            <span className="ml-2 text-sm">{character.affection}%</span>
           </div>
         </div>
+        
+        {/* Сообщение от персонажа */}
+        {message && (
+          <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-md">
+            <p className="text-center">{message}</p>
+          </div>
+        )}
+        
+        {/* Панель действий */}
+        <div className="absolute bottom-4 left-4 right-4 flex justify-center space-x-4">
+          <button 
+            onClick={handleInteract}
+            className="p-4 bg-white/70 dark:bg-gray-800/70 rounded-full shadow-lg"
+            disabled={processing}
+          >
+            <FaHeart size={24} className="text-red-500" />
+          </button>
+          
+          <button 
+            onClick={() => setShowGiftModal(true)}
+            className="p-4 bg-white/70 dark:bg-gray-800/70 rounded-full shadow-lg"
+            disabled={processing}
+          >
+            <FaGift size={24} className="text-green-500" />
+          </button>
+        </div>
       </div>
-      
-      {/* Вкладки */}
-      <div className="flex justify-between border-b border-gray-200 dark:border-gray-700 mb-6">
-        <button 
-          className={`pb-2 px-4 ${activeTab === 'stats' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('stats')}
-        >
-          Характеристики
-        </button>
-        <button 
-          className={`pb-2 px-4 ${activeTab === 'achievements' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('achievements')}
-        >
-          Достижения
-        </button>
-        <button 
-          className={`pb-2 px-4 ${activeTab === 'inventory' ? 'border-b-2 border-primary text-primary font-medium' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('inventory')}
-        >
-          Инвентарь
-        </button>
-      </div>
-      
-      {/* Контент вкладок */}
-      <div className="mb-6">
-        {/* Характеристики */}
-        {activeTab === 'stats' && (
+
+      {/* Модальное окно с подарками */}
+      <AnimatePresence>
+        {showGiftModal && (
           <motion.div 
+            className="fixed inset-0 bg-black/50 z-20 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-4"
+            exit={{ opacity: 0 }}
+            onClick={() => setShowGiftModal(false)}
           >
-            {Object.entries(statsInfo).map(([key, stat]) => (
-              <div 
-                key={key}
-                className="container-ios flex flex-col sm:flex-row sm:items-center sm:justify-between p-4"
-              >
-                <div className="flex items-center mb-3 sm:mb-0">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl mr-3">
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <h3 className={`font-bold ${stat.color}`}>{stat.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{stat.description}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between sm:justify-end sm:flex-shrink-0">
-                  <span className="font-bold text-xl mr-4">
-                    {getStatValue(key as StatType)}
-                  </span>
-                  <button 
-                    className="btn-primary text-sm py-1"
-                    onClick={() => {
-                      setSelectedStat(key as StatType);
-                      setShowConfirm(true);
-                    }}
+            <motion.div 
+              className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-md w-full"
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-bold mb-4">Выберите подарок</h2>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {gifts.map(gift => (
+                  <button
+                    key={gift.id}
+                    className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg text-center"
+                    onClick={() => handleGiveGift(gift)}
+                    disabled={processing || (currentUser?.coins || 0) < gift.price}
                   >
-                    Улучшить
-                  </button>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-        
-        {/* Достижения */}
-        {activeTab === 'achievements' && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            {achievements.map((achievement) => (
-              <div 
-                key={achievement.id}
-                className={`container-ios p-4 ${!achievement.unlocked ? 'opacity-60' : ''}`}
-              >
-                <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl mr-3">
-                    {achievement.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-bold">
-                      {achievement.title}
-                      {achievement.unlocked && (
-                        <span className="text-green-500 ml-2">✓</span>
-                      )}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{achievement.description}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-        
-        {/* Инвентарь */}
-        {activeTab === 'inventory' && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
-            {inventory.length > 0 ? (
-              inventory.map((item) => (
-                <div 
-                  key={item.id}
-                  className="container-ios p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl mr-3">
-                        {item.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-bold">
-                          {item.name}
-                          {item.equipped && (
-                            <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                              Экипировано
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{item.description}</p>
-                      </div>
+                    <img src={gift.image} alt={gift.name} className="w-12 h-12 mx-auto mb-2" />
+                    <p className="font-semibold">{gift.name}</p>
+                    <div className="flex items-center justify-center mt-1">
+                      <FaCoins className="text-yellow-500 mr-1" />
+                      <span>{gift.price}</span>
                     </div>
-                    
-                    {item.usable && (
-                      <button className="btn-secondary text-sm py-1">
-                        Использовать
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                <p className="text-4xl mb-3">🎒</p>
-                <p>Ваш инвентарь пуст</p>
-                <p className="text-sm mt-2">
-                  Выполняйте задачи и побеждайте в битвах, чтобы получить предметы
-                </p>
+                    <p className="text-xs mt-1">+{gift.affectionPoints} к близости</p>
+                  </button>
+                ))}
               </div>
-            )}
+              
+              <div className="flex justify-end mt-4">
+                <button 
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
+                  onClick={() => setShowGiftModal(false)}
+                >
+                  Отмена
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
-      </div>
-      
-      {/* Модальное окно подтверждения */}
-      {showConfirm && <StatConfirm />}
+      </AnimatePresence>
     </div>
   );
 };

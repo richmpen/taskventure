@@ -1,66 +1,113 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate, HashRouter } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import ThemeProvider from './context/ThemeContext';
 import PrivateRoute from './components/PrivateRoute';
+import Layout from './components/Layout';
+import { Toaster } from 'react-hot-toast';
 
-// Страницы
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Tasks from './pages/Tasks';
-import Battle from './pages/Battle';
-import Character from './pages/Character';
-import Settings from './pages/Settings';
-import NotFound from './pages/NotFound';
+// Импортируем все страницы из индексного файла
+import {
+  Home,
+  Login,
+  Register,
+  Tasks,
+  Battle,
+  Character,
+  Profile,
+  Admin,
+  Settings,
+  NotFound,
+  Friends,
+  Shop
+} from './pages';
 
-const AppRoutes: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Имитация загрузки приложения
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background dark:bg-background-dark">
-        <div className="text-center">
-          <div className="w-24 h-24 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <h2 className="text-xl font-semibold text-primary">Загрузка Taskventure...</h2>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <AuthProvider>
-      <div className="min-h-screen bg-background dark:bg-background-dark">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<PrivateRoute element={<Dashboard />} />} />
-          <Route path="/tasks" element={<PrivateRoute element={<Tasks />} />} />
-          <Route path="/battle" element={<PrivateRoute element={<Battle />} />} />
-          <Route path="/character" element={<PrivateRoute element={<Character />} />} />
-          <Route path="/settings" element={<PrivateRoute element={<Settings />} />} />
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </div>
-    </AuthProvider>
-  );
-};
-
-// Оборачиваем приложение в HashRouter для поддержки GitHub Pages
 const App: React.FC = () => {
   return (
-    <HashRouter>
-      <AppRoutes />
-    </HashRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(10px)',
+                color: '#333',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(0, 0, 0, 0.05)',
+                fontWeight: 500,
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10B981',
+                  secondary: 'white',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: 'white',
+                },
+              },
+            }}
+          />
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route path="tasks" element={
+                <PrivateRoute>
+                  <Tasks />
+                </PrivateRoute>
+              } />
+              <Route path="battle" element={
+                <PrivateRoute>
+                  <Battle />
+                </PrivateRoute>
+              } />
+              <Route path="characters" element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              } />
+              <Route path="character/:characterId" element={
+                <PrivateRoute>
+                  <Character />
+                </PrivateRoute>
+              } />
+              <Route path="profile" element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              } />
+              <Route path="friends" element={
+                <PrivateRoute>
+                  <Friends />
+                </PrivateRoute>
+              } />
+              <Route path="shop" element={
+                <PrivateRoute>
+                  <Shop />
+                </PrivateRoute>
+              } />
+              <Route path="admin" element={
+                <PrivateRoute requireAdmin>
+                  <Admin />
+                </PrivateRoute>
+              } />
+              <Route path="settings" element={
+                <PrivateRoute>
+                  <Settings />
+                </PrivateRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

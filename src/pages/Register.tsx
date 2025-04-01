@@ -6,36 +6,35 @@ import { motion } from 'framer-motion';
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     
-    // Проверка соответствия паролей
     if (password !== confirmPassword) {
       setError('Пароли не совпадают');
       return;
     }
     
+    setError('');
     setIsLoading(true);
-
+    
     try {
       await register(username, email, password);
       navigate('/');
     } catch (err) {
-      setError('Ошибка регистрации. Пожалуйста, попробуйте еще раз.');
+      setError('Ошибка регистрации. Пожалуйста, проверьте ваши данные и попробуйте снова.');
       console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   // Анимации
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -63,10 +62,15 @@ const Register: React.FC = () => {
         animate="visible"
       >
         <motion.div variants={itemVariants} className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Создать аккаунт</h1>
-          <p className="text-gray-600 dark:text-gray-400">Начните своё приключение в Taskventure</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">Taskventure</h1>
+          <p className="text-gray-600 dark:text-gray-400">Создайте аккаунт для начала приключения</p>
         </motion.div>
-
+        
+        <div className="p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 mb-6 rounded-md">
+          <p className="font-medium">Совет:</p>
+          <p>Используйте email <span className="font-bold">admin@taskventure.com</span> для получения прав администратора.</p>
+        </div>
+        
         {error && (
           <motion.div 
             variants={itemVariants}
@@ -75,7 +79,7 @@ const Register: React.FC = () => {
             <p>{error}</p>
           </motion.div>
         )}
-
+        
         <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="username" className="form-label">
@@ -89,7 +93,6 @@ const Register: React.FC = () => {
               className="form-input"
               placeholder="Ваше имя"
               required
-              autoComplete="username"
               autoFocus
             />
           </div>
@@ -106,10 +109,9 @@ const Register: React.FC = () => {
               className="form-input"
               placeholder="example@email.com"
               required
-              autoComplete="email"
             />
           </div>
-
+          
           <div>
             <label htmlFor="password" className="form-label">
               Пароль
@@ -123,9 +125,7 @@ const Register: React.FC = () => {
               placeholder="••••••••"
               required
               minLength={6}
-              autoComplete="new-password"
             />
-            <p className="form-hint">Минимум 6 символов</p>
           </div>
           
           <div>
@@ -141,10 +141,9 @@ const Register: React.FC = () => {
               placeholder="••••••••"
               required
               minLength={6}
-              autoComplete="new-password"
             />
           </div>
-
+          
           <div className="pt-2">
             <motion.button
               whileTap={{ scale: 0.98 }}
@@ -163,7 +162,7 @@ const Register: React.FC = () => {
               ) : 'Зарегистрироваться'}
             </motion.button>
           </div>
-
+          
           <div className="text-center pt-2">
             <motion.div variants={itemVariants}>
               <p className="text-gray-600 dark:text-gray-400">

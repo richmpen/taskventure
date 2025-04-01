@@ -1,34 +1,46 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Layout from './Layout';
 
 interface PrivateRouteProps {
-  element: React.ReactNode;
+  children: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ element }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requireAdmin = false }) => {
+  const { currentUser, loading } = useAuth();
+  const location = useLocation();
 
-  // Отображаем лоадер пока проверяем статус аутентификации
-  if (isLoading) {
+  console.log('PrivateRoute проверка:');
+  console.log('- Текущий путь:', location.pathname);
+  console.log('- Требуется админ:', requireAdmin);
+  console.log('- Текущий пользователь:', currentUser);
+  console.log('- isAdmin:', currentUser?.isAdmin);
+
+  // Если идет загрузка данных пользователя, показываем заглушку
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background dark:bg-background-dark">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-600 dark:text-gray-300">Проверка авторизации...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
-  // Если пользователь не авторизован, перенаправляем на страницу логина
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  // Если пользователь не авторизован, перенаправляем на страницу входа
+  if (!currentUser) {
+    return <Navigate to="/login" state={{ from: location }} />;
   }
 
-  // Если авторизован, отображаем запрошенный компонент внутри общего шаблона
-  return <Layout>{element}</Layout>;
+  // Если требуются права администратора, но у пользователя их нет
+  if (requireAdmin) {
+    if (currentUser.email !== 'admin@taskventure.com') {
+      console.error('Доступ запрещен: требуются права администратора');
+      return <Navigate to="/tasks" />;
+    }
+  }
+
+  // Если пользователь авторизован, показываем запрошенную страницу
+  return <>{children}</>;
 };
 
 export default PrivateRoute; 

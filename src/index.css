@@ -34,17 +34,75 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white py-2 px-4 rounded-ios shadow-ios 
-      hover:bg-primary-light active:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-light
-      transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[0px];
-  }
-
-  .btn-secondary {
-    @apply bg-secondary text-gray-800 py-2 px-4 rounded-ios shadow-ios 
-      hover:bg-secondary-light active:bg-secondary-dark focus:outline-none focus:ring-2 focus:ring-secondary-light
-      transition-all duration-300 transform hover:translate-y-[-2px] active:translate-y-[0px];
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-primary text-white font-medium shadow-sm 
+    hover:bg-primary-dark transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary;
   }
   
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium shadow-sm 
+    hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 dark:focus:ring-gray-500;
+  }
+  
+  .btn-danger {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-red-500 text-white font-medium shadow-sm 
+    hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
+  }
+  
+  .btn-success {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg bg-green-500 text-white font-medium shadow-sm 
+    hover:bg-green-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500;
+  }
+  
+  .form-input {
+    @apply mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+    focus:outline-none focus:ring-primary focus:border-primary dark:text-white;
+  }
+  
+  .form-textarea {
+    @apply mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+    focus:outline-none focus:ring-primary focus:border-primary dark:text-white;
+  }
+  
+  .form-select {
+    @apply mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+    focus:outline-none focus:ring-primary focus:border-primary dark:text-white;
+  }
+  
+  .container-glass {
+    @apply bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-sm;
+  }
+  
+  /* Анимированная кнопка */
+  .btn-animated {
+    @apply relative overflow-hidden;
+  }
+  
+  .btn-animated::after {
+    @apply absolute inset-0 w-full h-full bg-white opacity-0 transition-opacity;
+    content: '';
+  }
+  
+  .btn-animated:active::after {
+    @apply opacity-20;
+  }
+  
+  /* Красивые карточки */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden;
+  }
+  
+  .card-header {
+    @apply p-4 border-b border-gray-200 dark:border-gray-700;
+  }
+  
+  .card-body {
+    @apply p-4;
+  }
+  
+  .card-footer {
+    @apply p-4 border-t border-gray-200 dark:border-gray-700;
+  }
+
   .container-ios {
     @apply p-4 md:p-6 rounded-ios-lg bg-white dark:bg-gray-800 shadow-ios-md border border-gray-100 dark:border-gray-700
       transition-all duration-300;
@@ -68,19 +126,12 @@
     @apply border-task-failed;
   }
   
-  .form-input {
-    @apply w-full px-4 py-2 rounded-ios border border-gray-300 dark:border-gray-600 
-      dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent
-      transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500
-      disabled:opacity-70 disabled:cursor-not-allowed;
-  }
-
   .form-input-error {
     @apply border-red-500 focus:ring-2 focus:ring-red-400;
   }
 
   .form-label {
-    @apply block text-gray-700 dark:text-gray-300 mb-2 font-medium transition-colors duration-200;
+    @apply block text-gray-700 dark:text-gray-300 mb-2 font-medium text-sm transition-colors duration-200;
   }
 
   .form-hint {
@@ -89,6 +140,13 @@
 
   .form-error {
     @apply mt-1 text-sm text-red-500;
+  }
+
+  /* Кнопки */
+  .icon-button {
+    @apply p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 
+      transition-all duration-300 text-gray-600 dark:text-gray-400
+      hover:text-gray-800 dark:hover:text-gray-200;
   }
 
   /* Анимации для переходов и появления элементов */
@@ -116,6 +174,226 @@
   .ripple {
     @apply overflow-hidden relative;
   }
+  
+  /* Стили для страницы битвы */
+  .battle-page {
+    @apply p-4 md:p-6 max-w-7xl mx-auto;
+  }
+
+  .battle-header {
+    @apply mb-6 text-center;
+  }
+
+  .battle-header h1 {
+    @apply text-2xl md:text-3xl font-bold mb-2;
+  }
+
+  .battle-header p {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
+  .characters-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8;
+  }
+
+  .character-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg cursor-pointer;
+  }
+
+  .character-card.locked {
+    @apply opacity-75 grayscale;
+  }
+
+  .character-image {
+    @apply h-48 w-full relative overflow-hidden;
+  }
+
+  .lock-overlay {
+    @apply absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white;
+  }
+
+  .character-info {
+    @apply p-4;
+  }
+
+  .character-name {
+    @apply text-lg font-bold mb-2;
+  }
+
+  .character-stats {
+    @apply flex justify-between text-sm text-gray-600 dark:text-gray-400;
+  }
+
+  .character-selection {
+    @apply mt-6 p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-md;
+  }
+
+  .selected-character-info {
+    @apply mb-4;
+  }
+
+  .character-stats-detailed {
+    @apply flex space-x-4 mt-2;
+  }
+
+  .stat {
+    @apply flex flex-col;
+  }
+
+  .stat-label {
+    @apply text-xs text-gray-500 dark:text-gray-400;
+  }
+
+  .stat-value {
+    @apply text-lg font-bold;
+  }
+
+  .battle-buttons {
+    @apply flex space-x-4 justify-center;
+  }
+
+  /* Стили для экрана битвы */
+  .battle-screen {
+    @apply p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-md;
+  }
+
+  .battle-stats {
+    @apply mt-2;
+  }
+
+  .health-bar {
+    @apply mb-2;
+  }
+
+  .health-label {
+    @apply text-sm mb-1;
+  }
+
+  .health-bar-bg {
+    @apply h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+  }
+
+  .health-bar-fill {
+    @apply h-full transition-all duration-500 ease-out;
+  }
+
+  .enemy-health {
+    @apply bg-red-500;
+  }
+
+  .player-health {
+    @apply bg-green-500;
+  }
+
+  .battle-main {
+    @apply flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-6;
+  }
+
+  .battle-character {
+    @apply md:w-1/2 flex items-center justify-center;
+  }
+
+  .battle-character-image {
+    @apply max-w-full max-h-[400px] object-contain;
+  }
+
+  .battle-log {
+    @apply md:w-1/2 bg-gray-100 dark:bg-gray-900 rounded-lg p-4 max-h-[400px] overflow-y-auto;
+  }
+
+  .battle-log-entry {
+    @apply mb-2 pb-2 border-b border-gray-200 dark:border-gray-700 last:border-0 last:mb-0 last:pb-0;
+  }
+
+  .battle-actions {
+    @apply border-t border-gray-200 dark:border-gray-700 pt-4;
+  }
+
+  .task-list {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-2 mt-2;
+  }
+
+  .task-button {
+    @apply p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 
+    dark:hover:bg-gray-700 transition-colors duration-200 flex justify-between items-center;
+  }
+
+  .task-damage {
+    @apply ml-2 text-red-500 font-bold;
+  }
+
+  .enemy-turn-message {
+    @apply text-center py-8 text-xl font-bold text-amber-500;
+  }
+
+  .battle-result {
+    @apply text-center py-4;
+  }
+
+  .battle-rewards {
+    @apply mt-4;
+  }
+
+  .rewards-list {
+    @apply flex justify-center space-x-6 mt-2;
+  }
+
+  .loading-screen {
+    @apply min-h-[60vh] flex flex-col items-center justify-center;
+  }
+
+  .spinner {
+    @apply w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4;
+  }
+
+  /* Стили для полноэкранного просмотра персонажей */
+  .fullscreen-character {
+    @apply fixed inset-0 z-50 bg-black flex items-center justify-center;
+  }
+
+  .fullscreen-character-content {
+    @apply w-full h-full flex flex-col items-center justify-center relative;
+  }
+
+  .fullscreen-character-image {
+    @apply max-h-screen max-w-full object-contain;
+  }
+
+  .fullscreen-close-btn {
+    @apply absolute top-4 right-4 z-50 bg-white/20 text-white p-3 rounded-full backdrop-blur-sm;
+  }
+
+  .fullscreen-info {
+    @apply absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-8;
+  }
+
+  .fullscreen-character-name {
+    @apply text-4xl font-bold text-white mb-4;
+  }
+
+  .fullscreen-character-stats {
+    @apply flex space-x-8 mb-4;
+  }
+
+  .fullscreen-stat {
+    @apply flex flex-col;
+  }
+
+  .fullscreen-stat-label {
+    @apply text-white/70 text-base;
+  }
+
+  .fullscreen-stat-value {
+    @apply text-white font-bold text-2xl;
+  }
+
+  .fullscreen-character-desc {
+    @apply text-white/90 text-lg max-w-2xl;
+  }
+
+  .fullscreen-battle-btn {
+    @apply ml-8 bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-full text-lg font-bold;
+  }
 } 
 
 /* Отзывчивые улучшения для различных размеров экрана */
@@ -127,4 +405,85 @@
   .form-input {
     @apply px-3 py-2;
   }
+} 
+
+/* Анимации для пузырей на фоне */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Улучшенные переходы */
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.focus\:scale-105:focus {
+  transform: scale(1.05);
+}
+
+.active\:scale-95:active {
+  transform: scale(0.95);
+}
+
+/* Анимации */
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+.animate-pulse-border {
+  animation: pulse-border 2s infinite;
+}
+
+/* Кастомный скроллбар */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500 dark:bg-gray-500;
 } 
